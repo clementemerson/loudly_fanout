@@ -1,0 +1,23 @@
+{
+  "name": "fanout",
+  "version": "1.0.0",
+  "description": "fanning out changes to users who subscribed to get updates",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "clement",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^1.19.0"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.5",
+    "crypto-random-string": "^3.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.2.5",
+    "redis": "^2.8.0",
+    "url": "^0.11.0",
+    "ws": "^7.0.0"
+  }
+}
