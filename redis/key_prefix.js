@@ -8,4 +8,7 @@ module.exports = {
     pollsOfGroup: 'pollsOfGroup:',
 
     phoneNumber: 'phoneNo:',
+
+    pollSub: 'pollSub:',
+    pollUpdates: 'pollUpdates'
 };

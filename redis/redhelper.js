@@ -3,13 +3,13 @@ const keyPrefix = require('./key_prefix');
 
 module.exports = {
     createUser: async (userid, phoneNumber) => {
-        if(!userid || !phoneNumber)
+        if (!userid || !phoneNumber)
             throw "Invalid Arguments";
 
         await redClient.hmset(keyPrefix.phoneNumber + phoneNumber, 'id', userid);
     },
     addGroupUser: async (groupid, userid) => {
-        if(!groupid || !userid)
+        if (!groupid || !userid)
             throw "Invalid Arguments";
 
         if (await redClient.exists(keyPrefix.groupUsers + groupid) == 1)
@@ -18,7 +18,7 @@ module.exports = {
             return await redClient.sadd(keyPrefix.groupUsers + groupid, userid);
     },
     createPollResult: async (pollid, options, createdAt, updatedAt) => {
-        if(!pollid || !options || !createdAt || !updatedAt)
+        if (!pollid || !options || !createdAt || !updatedAt)
             throw "Invalid Arguments";
 
         await redClient.hmset(keyPrefix.pollResultUpdate + pollid, 'id', pollid,
@@ -28,27 +28,51 @@ module.exports = {
         });
     },
     updateOpenVoteResult: async (pollid, optionindex) => {
-        if(!pollid || !optionindex)
+        if (!pollid || !optionindex)
             throw "Invalid Arguments";
 
         await redClient.hincrby(keyPrefix.pollResultUpdate + pollid, 'OV' + optionindex.toString(), 1);
     },
     updateSecretVoteResult: async (pollid, optionindex) => {
-        if(!pollid || !optionindex)
+        if (!pollid || !optionindex)
             throw "Invalid Arguments";
 
         await redClient.hincrby(keyPrefix.pollResultUpdate + pollid, 'SV' + optionindex.toString(), 1);
     },
     getUserIdsByPhone: async (phoneNumbers) => {
-        if(!phoneNumbers)
+        if (!phoneNumbers)
             throw "Invalid Arguments";
 
         return await redClient.multiget(keyPrefix.phoneNumber, phoneNumbers);
     },
+    getPollResult: async (pollid) => {
+        if (!pollid)
+            throw "Invalid Arguments";
+
+        return await redClient.hgetall(keyPrefix.pollResultUpdate, pollid);
+    },
     getPollResults: async (pollids) => {
-        if(!pollids)
+        if (!pollids)
             throw "Invalid Arguments";
 
         return await redClient.multiget(keyPrefix.pollResultUpdate, pollids);
+    },
+    getSubscribedUsers: async (pollid) => {
+        if (!pollid)
+            throw "Invalid Arguments";
+
+        return await redClient.zrangebyscore(keyPrefix.pollSub + pollid, "-inf", "+inf");
+    },
+    getSubscribedUsersUntilTime: async (pollid, timeUntilSubscriptionMade) => {
+        if (!pollid || !timeUntilSubscriptionMade)
+            throw "Invalid Arguments";
+
+        return await redClient.zrangebyscore(keyPrefix.pollSub + pollid, "-inf", timeUntilSubscriptionMade);
+    },
+    removeElapsedSubscriptions: async (pollid, timeUntilSubscriptionMade) => {
+        if (!pollid || !timeUntilSubscriptionMade)
+            throw "Invalid Arguments";
+
+        return await redClient.zremrangebyscore(keyPrefix.pollSub + pollid, "-inf", timeUntilSubscriptionMade);
     },
 }
