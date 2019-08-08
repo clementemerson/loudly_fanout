@@ -4,6 +4,9 @@ const mongo = require('./db/mongo');
 const redClient = require('./redis/redclient');
 let connections = require('./websockets/connections');
 
+const keyPrefix = require('./redis/key_prefix');
+const redHelper = require('./redis/redhelper');
+
 let jwtController = require('./controllers/jwtController');
 
 let localServer = true;
@@ -67,9 +70,27 @@ setInterval(function ping() {
 //To send updates to the subscribed client - 500 ms
 setInterval(function sendPollUpdates() {
   //pop a pollid from pollupdates list from redis
-  //get the subscribed users for that poll from pollsub_pollid set from redis
-  //check the subscription time, if it elapsed, remove it from the pollsub_pollid
-  //send them the update and detail about subscription clearing
+  do {
+    const pollid = redClient.spop(keyPrefix.pollUpdates);
+    if(!pollid)
+      break;
+    
+    //get poll result from redis
+    const pollResult = redHelper.getPollResult(pollid);
+    console.log(pollResult);
+
+    //Todo: if pollresult is not in redis, update it by getting it from mongo.
+
+    //get the subscribed users for that poll from pollsub_pollid set from redis
+    const subscribedUsers = redHelper.getSubscribedUsers(pollid);
+    subscribedUsers.forEach(user_id => {
+      const wsConn = connections.getConnections().get(user_id);
+      if(!wsConn)
+        continue;
+
+      wsConn.send(JSON.stringify(pollResult));
+    });
+  } while (!!pollid);
 }, 500);
 
 //To clear the elapsed subscriptions - 1 day
