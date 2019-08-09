@@ -61,18 +61,18 @@ module.exports = {
         if (!pollid)
             throw "Invalid Arguments";
 
-        return await redClient.zrangebyscore(keyPrefix.pollSub + pollid, "-inf", "+inf");
+        return await redClient.zrangebyscore(keyPrefix.pollSubsription + pollid, "-inf", "+inf");
     },
     getSubscribedUsersUntilTime: async (pollid, timeUntilSubscriptionMade) => {
         if (!pollid || !timeUntilSubscriptionMade)
             throw "Invalid Arguments";
 
-        return await redClient.zrangebyscore(keyPrefix.pollSub + pollid, "-inf", timeUntilSubscriptionMade);
+        return await redClient.zrangebyscore(keyPrefix.pollSubsription + pollid, "-inf", timeUntilSubscriptionMade);
     },
     removeElapsedSubscriptions: async (pollid, timeUntilSubscriptionMade) => {
         if (!pollid || !timeUntilSubscriptionMade)
             throw "Invalid Arguments";
 
-        return await redClient.zremrangebyscore(keyPrefix.pollSub + pollid, "-inf", timeUntilSubscriptionMade);
+        return await redClient.zremrangebyscore(keyPrefix.pollSubsription + pollid, "-inf", timeUntilSubscriptionMade);
     },
 }
