@@ -8,6 +8,7 @@ const keyPrefix = require('./redis/key_prefix');
 const redHelper = require('./redis/redhelper');
 
 let jwtController = require('./controllers/jwtController');
+const updateController = require('./controllers/UpdateController');
 
 let localServer = true;
 
@@ -62,35 +63,14 @@ wss.on('connection', async (ws_client, req) => {
 setInterval(function ping() {
   Array.from(connections.getConnections().values()).forEach(function each(client_stream) {
     if (!client_stream.is_alive) { client_stream.terminate(); return; }
-    client_stream.is_alive = true;
+    client_stream.is_alive = true; //false?
     client_stream.ping();
   });
-}, 120000);
+}, 15000);
 
 //To send updates to the subscribed client - 500 ms
-setInterval(function sendPollUpdates() {
-  //pop a pollid from pollupdates list from redis
-  do {
-    const pollid = redClient.spop(keyPrefix.pollUpdates);
-    if(!pollid)
-      break;
-    
-    //get poll result from redis
-    const pollResult = redHelper.getPollResult(pollid);
-    console.log(pollResult);
-
-    //Todo: if pollresult is not in redis, update it by getting it from mongo.
-
-    //get the subscribed users for that poll from pollsub_pollid set from redis
-    const subscribedUsers = redHelper.getSubscribedUsers(pollid);
-    subscribedUsers.forEach(user_id => {
-      const wsConn = connections.getConnections().get(user_id);
-      if(!wsConn)
-        continue;
-
-      wsConn.send(JSON.stringify(pollResult));
-    });
-  } while (!!pollid);
+setInterval(() => {
+  await updateController.sendPollUpdates();
 }, 500);
 
 //To clear the elapsed subscriptions - 1 day
